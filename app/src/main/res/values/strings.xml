@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">BikeBuddy</string>
+    <string name="center_on_user">Center on user location</string>
+    <string name="info_details">Show information details</string>
+    <string name="information_button">Information Button</string>
+    <string name="center_camera_on_user">center_on_user</string>
+</resources>
