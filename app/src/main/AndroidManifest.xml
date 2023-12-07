@@ -18,30 +18,29 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.LocationPlus"
         tools:targetApi="31">
+        <activity
+            android:name=".RoutesListActivity"
+            android:exported="false" />
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="@string/google_maps_key" />
-
-        <!-- MainMenuActivity is set as the entry point -->
+            android:value="@string/google_maps_key" /> <!-- MainMenuActivity is set as the entry point -->
         <activity
             android:name=".MainMenuActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
-
-        <!-- MapsActivity -->
+        </activity> <!-- MapsActivity -->
         <activity
             android:name=".MapsActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <!-- No intent-filter needed for MAIN action and LAUNCHER category -->
-    </activity>
 
-    <!-- Other activities can be defined here -->
+            <!-- No intent-filter needed for MAIN action and LAUNCHER category -->
+        </activity>
+    </application>
 
-</application>
-
-    </manifest>
+</manifest>

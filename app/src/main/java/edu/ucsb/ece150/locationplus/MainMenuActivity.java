@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 public class MainMenuActivity extends AppCompatActivity {
 
+    /*--------------------//ACTIVITY STATE//------------------------------*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -17,6 +18,7 @@ public class MainMenuActivity extends AppCompatActivity {
         Button startRideButton = findViewById(R.id.start_ride_button);
         Button viewPreviousRidesButton = findViewById(R.id.view_previous_rides_button);
 
+        /*--------------------//Buttons//------------------------------*/
         startRideButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -34,6 +36,10 @@ public class MainMenuActivity extends AppCompatActivity {
                 //startActivity(intent);
             }
         });
+        //--------------------------------------------------------------------//
+
     }
+
+    //---------------------------------------------------------------------//
 }
 

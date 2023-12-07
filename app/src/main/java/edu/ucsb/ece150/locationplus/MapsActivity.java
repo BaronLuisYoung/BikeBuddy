@@ -20,7 +20,9 @@ import android.util.Log;
 import android.Manifest;
 import android.view.View;
 
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
@@ -40,6 +42,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import android.widget.ArrayAdapter;
 
 
 import java.lang.reflect.Type;
@@ -73,16 +76,21 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     private CameraPosition cameraPosition; //may use later
 
     private List<LatLng> bikeRoutePoints = new ArrayList<>();
-    private Polyline bikeRoute;
+    private Polyline currentBikeRoute;
+    private ArrayList<BikeRoute> bikeRoutes;
 
+    private boolean drawRoute = false;
+    private ArrayAdapter<BikeRoute> adapter;
 
-    /*--------------------//ACTIVITY STATE//-------------------------------------*/
+    /*--------------------//ACTIVITY STATE//----------------------------------*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("MapsActivity", "onCreate: ");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
+
+        bikeRoutes = new ArrayList<BikeRoute>();
 
         // Set up Google Maps
         SupportMapFragment mapFragment = (SupportMapFragment)
@@ -103,6 +111,31 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
         //sets up button to center on user location
         ImageButton btnCenterOnUser = findViewById(R.id.button_center_on_user);
+
+        //Start Ride Button
+        FloatingActionButton startRideFab = findViewById(R.id.start_ride_button);
+        startRideFab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("MapsActivity", "onClick: Ride start button clicked");
+
+                drawRoute = !drawRoute;
+                if(drawRoute) {
+                    Toast.makeText(view.getContext(), "Ride Started!", Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT).show();
+                    bikeRoutes.add(new BikeRoute(bikeRoutePoints));
+                    bikeRoutePoints.clear();
+//
+//                  currentBikeRoute.remove();
+
+                }
+            }
+        });
+
+        // If you need to enable the FAB based on certain conditions
+        startRideFab.setEnabled(true); // Enable the FAB
         btnCenterOnUser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -120,6 +153,21 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                     userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15)); // You can define the zoom level
                 }
+            }
+        });
+
+        //sets up button in toolbar to view previous rides
+        ImageButton btnViewPreviousRides = findViewById(R.id.list_routes_button);
+        btnViewPreviousRides.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("MapsActivity", "onClick: View Previous Rides button clicked");
+                Intent intent = new Intent(MapsActivity.this, RoutesListActivity.class);
+                //convert bikeRoutes to json
+                Gson gson = new Gson();
+                String json = gson.toJson(bikeRoutes);
+                intent.putExtra("bikeRoutesKey", json);
+                startActivity(intent);
             }
         });
     }
@@ -210,11 +258,14 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             Log.d("MapsActivity", "onLocationChanged: updated user position and marker success");
         }
 
-        LatLng newPoint = new LatLng(location.getLatitude(), location.getLongitude());
-        bikeRoutePoints.add(newPoint);
 
         // Update the polyline on the map
-        updateBikeRouteOnMap();
+        if(drawRoute) {
+            //new points are not added to map until you call updateBikeOnMap();
+            LatLng newPoint = new LatLng(location.getLatitude(), location.getLongitude());
+            bikeRoutePoints.add(newPoint);
+            updateBikeRouteOnMap();
+        }
 
         // Move the camera to the user's location and zoom in
         //mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15));
@@ -231,15 +282,15 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     public void onStatusChanged(String provider, int status, Bundle extras) {}
     //------------------------//MAP ROUTE DRAWING//-----------------------------//
     private void updateBikeRouteOnMap() {
-        if (bikeRoute != null) {
-            bikeRoute.remove(); // Remove the old polyline
+        if (currentBikeRoute != null) {
+            currentBikeRoute.remove(); // Remove the old polyline
         }
         PolylineOptions polylineOptions = new PolylineOptions()
                 .addAll(bikeRoutePoints)
                 .width(5) // Width of the polyline
                 .color(Color.BLUE); // Color of the polyline
 
-        bikeRoute = mMap.addPolyline(polylineOptions);
+        currentBikeRoute = mMap.addPolyline(polylineOptions);
 }
 
 }
