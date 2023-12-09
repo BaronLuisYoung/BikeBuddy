@@ -11,10 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BikeRoute {
-    private List<String> timestamps;
+
+    private final int id;
     //create private list of pair of doubles
     private List<Pair<Double, Double>> coordinates;
-    public BikeRoute(List<LatLng>latLngList) { //add timestamps argument later
+    public BikeRoute(List<LatLng>latLngList, int id) { //add timestamps argument later
+        this.id = id;
         coordinates = new ArrayList<>();
         for (LatLng latLng : latLngList) {
             coordinates.add(new Pair<>(latLng.latitude, latLng.longitude));
@@ -22,20 +24,20 @@ public class BikeRoute {
 
         //this.timestamps = timestamps;
         //this.videoReference = videoReference;
+
     }
 
-    //create a tostring method that returns the coordinates
+    //create a toString method that returns the coordinates
     @NonNull
     @Override
     public String toString() {
-        return coordinates.toString();
+        return "ID: " + id + "\n Coord: " + coordinates.toString();
     }
-    //private String videoReference; // Can be a file path, URL, or database ID
 
+    //private String videoReference; // Can be a file path, URL, or database ID
     // Constructors, getters and setters for timestamps and polyline...
 
-
-    //gettter that converts coordinates to latlng
+    //Getter that converts coordinates to latlng
     public List<LatLng> getLatLngList() {
         List<LatLng> latLngList = new ArrayList<>();
         for (Pair<Double, Double> coordinate : coordinates) {
@@ -53,5 +55,7 @@ public class BikeRoute {
         this.videoReference = videoReference;
     }
      */
+
     // Other methods...
+
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -26,6 +26,7 @@
             android:contentDescription="@string/center_camera_on_user"
             android:scaleType="center"
             android:src="@android:drawable/ic_menu_mylocation"
+            android:layout_gravity="end"
             tools:ignore="TouchTargetSizeCheck" />
 
         <!-- Button 2 -->
@@ -33,6 +34,7 @@
             android:id="@+id/list_routes_button"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:layout_gravity="end"
             android:layout_alignParentEnd="true"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_menu_info_details"
@@ -46,6 +48,8 @@
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:layout_anchor="@+id/map"
+        app:layout_anchorGravity="center"
         tools:context=".MapsActivity" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -53,13 +57,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/appToolbar"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginTop="44dp"
-        android:layout_marginEnd="41dp"
-        android:layout_marginBottom="556dp"
+        android:layout_gravity="top|end"
         android:clickable="true"
+        android:layout_marginTop="75dp"
+        android:layout_marginRight="15dp"
         app:srcCompat="@android:drawable/ic_input_add" />
 
-</RelativeLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
 
