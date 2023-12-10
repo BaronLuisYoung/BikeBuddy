@@ -12,18 +12,23 @@ import java.util.List;
 
 public class BikeRoute {
 
+    private final float distanceTraveled;
     private final int id;
-    //create private list of pair of doubles
-    private List<Point> coordinates;
 
-    public BikeRoute(List<Point>latLngList, int id) { //add timestamps argument later
+    //TODO display these fields in the MapsActivity when
+    // the user clicks on a route from RoutesListActivity
+    private float maxSpeed;
+    private float avgSpeed;
+    private float avgAltitude;
+    private float maxAltitude;
+    private float maxAcceleration;
+    private final List<Point> coordinates;
+
+    public BikeRoute(List<Point>latLngList, int id, float distanceTraveled) { //add timestamps argument later
         this.id = id;
+        this.distanceTraveled = distanceTraveled;
         coordinates = new ArrayList<>();
         coordinates.addAll(latLngList);
-
-        //this.timestamps = timestamps;
-        //this.videoReference = videoReference;
-
     }
 
     public List<Point> getCoordinates() {
@@ -33,24 +38,21 @@ public class BikeRoute {
     @NonNull
     @Override
     public String toString() {
-        return "ID: " + id;
+        return "ID: " + id + '\n' + " Distance Traveled: " + distanceTraveled;
     }
 
-    //private String videoReference; // Can be a file path, URL, or database ID
-    // Constructors, getters and setters for timestamps and polyline...
-
-    //Getter that converts coordinates to latlng
-
-    /*
-    public String getVideoReference() {
-        return videoReference;
+    public float getDistanceTraveled() {
+        return distanceTraveled;
     }
 
-    public void setVideoReference(String videoReference) {
-        this.videoReference = videoReference;
+    public long getStartTimestamp() {
+        return coordinates.get(0).getTimeStamp();
     }
-     */
 
-    // Other methods...
+    public long getEndTimestamp() {
+        return coordinates.get(coordinates.size() - 1).getTimeStamp();
+    }
+
+
 
 }

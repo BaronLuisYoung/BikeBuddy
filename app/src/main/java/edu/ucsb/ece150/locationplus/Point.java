@@ -25,11 +25,16 @@ public class Point {
     public String toString() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
 
-// Convert the timestamp into a Date object
+        // Convert the timestamp into a Date object
         Date date = new Date(timeStamp);
 
-// Format the date into a human-readable string
+        // Format the date into a human-readable string
         String formattedDate = sdf.format(date);
         return "Lat: " + location.first + " Lng: " + location.second + " Time: " + formattedDate;
     }
+
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
 }

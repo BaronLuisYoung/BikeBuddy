@@ -1,13 +1,7 @@
 package edu.ucsb.ece150.locationplus;
 
-import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
@@ -24,7 +18,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.Manifest;
 import android.util.Pair;
-import android.util.TimeUtils;
 import android.view.View;
 
 import android.widget.ArrayAdapter;
@@ -37,7 +30,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -50,7 +42,6 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import android.widget.ArrayAdapter;
 
 
 import java.lang.reflect.Type;
@@ -64,8 +55,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -73,41 +62,51 @@ import com.google.gson.reflect.TypeToken;
 public class MapsActivity extends AppCompatActivity implements LocationListener, OnMapReadyCallback {
 
     /*---------------------------------Constants------------------------------------*/
-
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-
-
-    /*------------------------------------------------------------------------------*/
-    long oldTime = 0;
-    private GoogleMap mMap;
-    private LocationManager mLocationManager;
-    private SensorManager mSensorManager;
-    private Sensor accelerometer;
-
-    private long lastUpdateTime;
-
+    /*---------------------------------UI Components--------------------------------*/
+    // TextViews for displaying acceleration and velocity
     TextView accelTextView;
     TextView velocityTextView;
-    Location currentLocation;
-    private Marker currentUserLocationMarker;
-    FusedLocationProviderClient fusedLocationProviderClient;
-    private LatLng userLocation;
-    private static SharedPreferences sharedPref;
-    private CameraPosition mCameraPosition;
-    private List<Point> bikeRoutePoints = new ArrayList<>();
-    private Polyline currentBikeRoute;
-    private ArrayList<BikeRoute> bikeRoutes;
-    private boolean drawRoute;
-    private boolean startSpeed = false;
 
-    private Location oldLocation;
-    private int count = 0;
-    private ArrayAdapter<BikeRoute> adapter;
+    /*---------------------------------Location--------------------------------------*/
+    // Manages and interacts with location services
+    private GoogleMap mMap; // Google Map object for display and interaction
+    private LocationManager mLocationManager; // For obtaining the user's location
+    private FusedLocationProviderClient fusedLocationProviderClient; // Alternative location API
+    private Location currentLocation; // Stores the current location
+    private Marker currentUserLocationMarker; // Marker for the current user location on the map
+    private LatLng userLocation; // Latitude and Longitude of the user
+    private CameraPosition mCameraPosition; // Camera position for map view
+    private Location oldLocation; // Stores the previous location
 
-    private float totalDistance = 0f;
+    /*---------------------------------Route Management-------------------------------*/
+    // Manages the bike route points and drawing on the map
+    private final List<Point> bikeRoutePoints = new ArrayList<>(); // Stores points of the bike route
+    private Polyline currentBikeRoute; // Polyline to draw the current bike route
+    private ArrayList<BikeRoute> bikeRoutes; // List of saved bike routes
+    private boolean drawRoute; // Flag to control route drawing
+    private int rideID = 1; // Identifier for the current ride
+
+    /*-------------------------------Sensor Management-------------------------------*/
+    // Manages sensor data and updates
+    private SensorManager mSensorManager; // Sensor manager for accessing device sensors
+    private Sensor accelerometer; // Accelerometer sensor for movement detection
+    private long lastUpdateTime; // Time of the last sensor update
+
+    /*---------------------------------Preferences-----------------------------------*/
+    // Handles shared preferences for storing and retrieving data
+    private static SharedPreferences sharedPref; // Shared preferences object
+    /*---------------------------------Timing----------------------------------------*/
+    // Manages time measurements and intervals
+    long oldTime = 0; // Stores an old time value for calculations
+
+    /*---------------------------------Speed & Distance------------------------------*/
+    // Variables for speed and distance calculations
+    private boolean startSpeed = false; // Flag to indicate if speed calculation should start
+    private float totalDistance = 0f; // Accumulated distance traveled
+
 
     /*----------------------onCreate Set Up functions----------------------------------*/
-
     private void updateBikeRoutePointsFromJson(String bikeRoutePointsJson) {
         Log.d("MapsActivity", "updateBikeRoutePointsFromJson: entered");
         Gson gson = new Gson();
@@ -181,7 +180,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
                 if (lastKnownLocation != null) {
                     userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 15)); // You can define the zoom level
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 30)); // You can define the zoom level
                 }
             }
         });
@@ -200,8 +199,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             totalDistance = 0.0f;
         } else {
             Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT).show();
-            BikeRoute temp = new BikeRoute(bikeRoutePoints, count);
-            count++;
+            BikeRoute temp = new BikeRoute(bikeRoutePoints, rideID, totalDistance);
+            rideID++;
             bikeRoutes.add(temp);
             bikeRoutePoints.clear();
             Gson gson = new Gson();
@@ -250,18 +249,14 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
     };
 
-    /*----------------------------//ACTIVITY STATE//-------------------------------*/
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        Log.d("MapsActivity", "onCreate: ");
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+    private void initializeVariables(){
         accelTextView = findViewById(R.id.currentAcceleration);
         velocityTextView = findViewById(R.id.currentSpeed);
         bikeRoutes = new ArrayList<>();
         oldTime = System.currentTimeMillis();
+    }
 
-
+    private void loadSharedPrefsandRestoreData(){
         SharedPreferences shared = getSharedPreferences("RoutesList", MODE_PRIVATE);
         Gson gson = new Gson();
         String json = shared.getString("bikeRoutesList", "");
@@ -269,7 +264,16 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             BikeRoute[] routes = gson.fromJson(json, BikeRoute[].class);
             bikeRoutes.addAll(Arrays.asList(routes));
         }
+    }
 
+    /*----------------------------//ACTIVITY STATE//-------------------------------*/
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.d("MapsActivity", "onCreate: ");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_maps);
+        initializeVariables();
+        loadSharedPrefsandRestoreData();
         initializeGoogleMaps();
         initializeSensors();
         initializeUIElements();
@@ -285,7 +289,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
         Log.d("MapsActivity", "onResume: entered");
         sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
-        count = sharedPref.getInt("count", 0);
+        rideID = sharedPref.getInt("rideID", 0);
         if(drawRoute) {
             restoreBikeRoutePoints();
             if (bikeRoutePoints.size() > 0) {
@@ -303,7 +307,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
 
         drawRoute = sharedPref.getBoolean("drawRoute", false);
-        Log.d("MapsActivity", "onResume: " + drawRoute);
+        Log.d("MapsActivity", "onResume: drawRoute is" + drawRoute);
     }
     @Override
     protected void onPause() {
@@ -325,7 +329,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             }
 
             editor.putBoolean("drawRoute", drawRoute);
-            editor.putInt("count", count);
+            editor.putInt("rideID", rideID);
 
             Gson gson = new Gson();
             Type type = new TypeToken<List<Point>>() {}.getType();
@@ -350,6 +354,17 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        //if a ride is in progress end the ride
+        if(drawRoute){
+            drawRoute = false;
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putBoolean("drawRoute", drawRoute);
+            editor.commit();
+        }
+        //stop DrawRouteService since we are closing the app
+        Log.d("MapsActivity", "onDestroy: closing app, stopping service");
+        Intent serviceIntent = new Intent(this, DrawRouteService.class);
+        stopService(serviceIntent);
     }
     /*-----------------//MAP & LOCATION IMPLEMENTED FUNCTION//------------------*/
     /* These classes are from the implementation used in class definition
@@ -360,6 +375,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
         Log.d("MapsActivity", "onMapReady: entered");
 
+        //for when user clicks on a route in the list
+        //get the index of the route clicked on and draw it on the map
         Intent intent = getIntent();
         int index = intent.getIntExtra("routeIndex", -1);
         if(index != -1){
@@ -375,7 +392,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             drawBikeRoutePolyline(latLngList);
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngList.get(0), 15));
         }
-        //set camera location on position of user may not be necessary
+        //set camera location on position of user back to where user was
         if (mMap != null) {
             SharedPreferences sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
             float lat = sharedPref.getFloat("camera_lat", 34); // Provide a default value
@@ -446,7 +463,6 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         accelTextView.setText(accelText);
 
     }
-
     public float calculateDistance(Point start, Point end) {
         float[] results = new float[1];
         Pair<Double, Double> startLocation = start.getLocation();

@@ -32,7 +32,6 @@ public class RoutesListActivity extends AppCompatActivity {
         }
 
         initializeToolbar();
-        //retrieveIntentData();
         setupListView();
         setupFabButton();
     }
@@ -57,7 +56,8 @@ public class RoutesListActivity extends AppCompatActivity {
         }
     }
 
-    private void setupListView() {
+    private void setupListView()
+    {
         ListView cardList = findViewById(R.id.cardList);
         if (bikeRoutesList != null) {
             ArrayAdapter<BikeRoute> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, bikeRoutesList);
