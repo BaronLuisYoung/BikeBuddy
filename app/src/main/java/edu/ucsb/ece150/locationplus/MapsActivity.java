@@ -119,11 +119,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     private void restoreBikeRoutePoints() {
         Log.d("MapsActivity", "restoreBikeRoutePoints: entered");
-        String bikeRoutePoints1 = sharedPref.getString("bikeRoutePoints", "");
         String newBikeRoutePoints = sharedPref.getString("newBikeRoutePoints", "");
-        if (!bikeRoutePoints1.isEmpty()) {
-            updateBikeRoutePointsFromJson(bikeRoutePoints1);
-        }
         Log.d("MapsActivity", "restored newBikeRoutePoints: " + newBikeRoutePoints);
         if(!newBikeRoutePoints.isEmpty() && !newBikeRoutePoints.equals("null")){
             updateBikeRoutePointsFromJson(newBikeRoutePoints);
