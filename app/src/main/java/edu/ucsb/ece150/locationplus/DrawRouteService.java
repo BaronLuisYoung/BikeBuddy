@@ -4,6 +4,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Binder;
 import android.os.IBinder;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -39,16 +40,22 @@ public class DrawRouteService extends Service {
         createNotificationChannel();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
-        SharedPreferences preferences = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.remove("newBikeRoutePoints");
-        editor.apply();
+//        SharedPreferences preferences = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
+//        SharedPreferences.Editor editor = preferences.edit();
+        //editor.remove("newBikeRoutePoints");
+        //Log.d("DrawRouteService", "onCreate: old bikePoints removed");
+        //editor.commit();
+        bikeRoutePoints = new ArrayList<>();
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
                 Log.d("DrawRouteService", "onLocationChanged: adding point");
                 Point currentPoint = new Point(location.getLatitude(), location.getLongitude(), location.getTime());
                 bikeRoutePoints.add(currentPoint);
+                if(drawRoute) {
+                    Log.d("MapsActivity", "onDestroy: points saved to shared pref");
+                    saveBikeRoutePoints();
+                }
             }
 
             @Override
@@ -62,7 +69,7 @@ public class DrawRouteService extends Service {
 
         };
 
-        bikeRoutePoints = new ArrayList<>();
+
 
         try {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
@@ -79,7 +86,8 @@ public class DrawRouteService extends Service {
         String bikeRoutePointsJson = gson.toJson(bikeRoutePoints);
         Log.d("DrawRouteService", "saveBikeRoutePoints: " + bikeRoutePointsJson );
         editor.putString("newBikeRoutePoints", bikeRoutePointsJson);
-        editor.apply();
+        editor.commit();
+
     }
 
     @Override
@@ -101,10 +109,6 @@ public class DrawRouteService extends Service {
         return START_STICKY;
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
 
     @Override
     public void onDestroy() {
@@ -115,11 +119,6 @@ public class DrawRouteService extends Service {
             locationManager.removeUpdates(locationListener);
         }
 
-
-        if(drawRoute) {
-            Log.d("MapsActivity", "onDestroy: points saved to shared pref");
-            saveBikeRoutePoints();
-        }
 //        Intent intent = new Intent("edu.ucsb.ece150.locationplus.SERVICE_ENDED");
 //        intent.putExtra("drawRouteEnded", true); // 'drawRoute' is your boolean value
 //        sendBroadcast(intent);
@@ -138,5 +137,19 @@ public class DrawRouteService extends Service {
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
+    }
+
+
+    private final IBinder binder = new LocalBinder();
+
+    public class LocalBinder extends Binder {
+        DrawRouteService getService() {
+            return DrawRouteService.this;
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return binder;
     }
 }

@@ -218,7 +218,6 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
     }
 
-
     @Override
    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -249,7 +248,6 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         public void onSensorChanged(SensorEvent event) {
             // Calculate acceleration and velocity
         }
-
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
             // You can leave this method empty if you're not using it
