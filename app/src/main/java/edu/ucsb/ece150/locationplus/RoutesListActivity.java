@@ -39,14 +39,6 @@ public class RoutesListActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        /*
-        SharedPreferences shared = getSharedPreferences("RoutesList", MODE_PRIVATE);
-        SharedPreferences.Editor editor = shared.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(bikeRoutesList);
-        editor.putString("bikeRoutesList", json);
-        editor.apply();
-        */
     }
     private void initializeToolbar() {
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -72,6 +64,16 @@ public class RoutesListActivity extends AppCompatActivity {
             cardList.setAdapter(adapter);
             adapter.notifyDataSetChanged();
         }
+        cardList.setOnItemClickListener((parent, view, position, id) -> {
+            Intent intent = new Intent(RoutesListActivity.this, MapsActivity.class);
+            intent.putExtra("routeIndex", position);
+            setResult(RESULT_OK, intent);
+            boolean goToMapsActivity = getIntent().getBooleanExtra("goToMapsActivity", false);
+            if (goToMapsActivity) {
+                startActivity(intent);
+            }
+            finish();
+        });
     }
 
     private void setupFabButton() {

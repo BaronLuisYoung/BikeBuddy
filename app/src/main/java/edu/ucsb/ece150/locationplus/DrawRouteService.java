@@ -1,6 +1,7 @@
 package edu.ucsb.ece150.locationplus;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
@@ -28,7 +29,7 @@ public class DrawRouteService extends Service {
     private static final String CHANNEL_ID = "DrawRouteServiceChannel";
     private LocationManager locationManager;
     private LocationListener locationListener;
-    private List<Pair<Double, Double>> bikeRoutePoints; // List to store location points
+    private List<Point> bikeRoutePoints; // List to store location points
 
     boolean drawRoute;
     @Override
@@ -38,11 +39,15 @@ public class DrawRouteService extends Service {
         createNotificationChannel();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
+        SharedPreferences preferences = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.remove("newBikeRoutePoints");
+        editor.apply();
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(@NonNull Location location) {
                 Log.d("DrawRouteService", "onLocationChanged: adding point");
-                Pair<Double, Double> currentPoint = new Pair<>(location.getLatitude(), location.getLongitude());
+                Point currentPoint = new Point(location.getLatitude(), location.getLongitude(), location.getTime());
                 bikeRoutePoints.add(currentPoint);
             }
 
@@ -72,6 +77,7 @@ public class DrawRouteService extends Service {
         SharedPreferences.Editor editor = prefs.edit();
         Gson gson = new Gson();
         String bikeRoutePointsJson = gson.toJson(bikeRoutePoints);
+        Log.d("DrawRouteService", "saveBikeRoutePoints: " + bikeRoutePointsJson );
         editor.putString("newBikeRoutePoints", bikeRoutePointsJson);
         editor.apply();
     }
@@ -79,7 +85,7 @@ public class DrawRouteService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d("DrawRouteService", "onStartCommand: entered");
-        boolean drawRoute = false;
+        drawRoute = false;
         if (intent != null) {
             drawRoute = intent.getBooleanExtra("drawRoute", false);
             Log.d("DrawRouteService", "onStartCommand: drawRoute is " + drawRoute);
@@ -103,10 +109,12 @@ public class DrawRouteService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.d("DrawRouteService", "onDestroy: entered, " + drawRoute);
         // Stop location updates to conserve battery and resources
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
+
 
         if(drawRoute) {
             Log.d("MapsActivity", "onDestroy: points saved to shared pref");

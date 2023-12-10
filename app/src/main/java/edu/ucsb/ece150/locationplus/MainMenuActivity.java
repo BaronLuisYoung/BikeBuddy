@@ -33,6 +33,7 @@ public class MainMenuActivity extends AppCompatActivity {
         viewPreviousRidesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //startMapsActivity();
                 startRoutesListActivity();
             }
         });
@@ -47,7 +48,8 @@ public class MainMenuActivity extends AppCompatActivity {
     private void startRoutesListActivity() {
         // Start an activity for viewing previous rides
         Intent intent = new Intent(MainMenuActivity.this, RoutesListActivity.class);
-        startActivity(intent);
+        intent.putExtra("goToMapsActivity", true);
+        startActivityForResult(intent, 2);
     }
 }
 
