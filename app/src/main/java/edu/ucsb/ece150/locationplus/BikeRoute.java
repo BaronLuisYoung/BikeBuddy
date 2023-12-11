@@ -8,10 +8,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class BikeRoute {
-
     private final float distanceTraveled;
     private final int id;
 
@@ -38,13 +38,17 @@ public class BikeRoute {
     @NonNull
     @Override
     public String toString() {
-        return "ID: " + id + '\n' + " Distance Traveled: " + distanceTraveled;
-    }
+        Date dateStartTS = new Date(getStartTimestamp());
+        Date dateEndTS  = new Date(getEndTimestamp());
+        return "ID: " + id + '\n'
+                + " Distance Traveled: " + distanceTraveled + 'm' + '\n'
+                + "Start Time:"  + dateStartTS.toString() + '\n'
+                + "End Time:" + dateEndTS.toString() + '\n';
+        }
 
     public float getDistanceTraveled() {
         return distanceTraveled;
     }
-
     public long getStartTimestamp() {
         return coordinates.get(0).getTimeStamp();
     }

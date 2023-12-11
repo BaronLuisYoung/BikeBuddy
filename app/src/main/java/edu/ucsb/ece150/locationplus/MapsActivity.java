@@ -1,6 +1,7 @@
 package edu.ucsb.ece150.locationplus;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -72,6 +74,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     // Manages and interacts with location services
     private GoogleMap mMap; // Google Map object for display and interaction
     private LocationManager mLocationManager; // For obtaining the user's location
+
+    //TODO: check if this is needed
     private FusedLocationProviderClient fusedLocationProviderClient; // Alternative location API
     private Location currentLocation; // Stores the current location
     private Marker currentUserLocationMarker; // Marker for the current user location on the map
@@ -104,7 +108,6 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     // Variables for speed and distance calculations
     private boolean startSpeed = false; // Flag to indicate if speed calculation should start
     private float totalDistance = 0f; // Accumulated distance traveled
-
 
     /*----------------------onCreate Set Up functions----------------------------------*/
     private void updateBikeRoutePointsFromJson(String bikeRoutePointsJson) {
@@ -139,6 +142,30 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     }
 
+    private void showStartRideConfirmationDialog(View view) {
+        new AlertDialog.Builder(this)
+                .setTitle("Start Ride")
+                .setMessage("Are you sure you want to start a new ride?")
+                .setIcon(R.drawable.ic_launcher_foreground)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        handleStartRideButtonClick(view);
+                    }})
+                .setNegativeButton(android.R.string.no, null).show();
+    }
+
+    private void showEndRideConfirmationDialog(View view) {
+        new AlertDialog.Builder(this)
+                .setTitle("End Ride")
+                .setMessage("Are you sure you want to end the ride?")
+                .setIcon(R.drawable.ic_launcher_foreground)
+                .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        handleStartRideButtonClick(view);
+                    }})
+                .setNegativeButton(android.R.string.no, null).show();
+    }
+
     private void initializeUIElements() {
         Toolbar mToolbar = findViewById(R.id.appToolbar);
         setSupportActionBar(mToolbar);
@@ -149,7 +176,11 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         startRideFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                handleStartRideButtonClick(view);
+                //TODO: add prompt to confirm start ride
+                if(!drawRoute)
+                    showStartRideConfirmationDialog(view);
+                else
+                    showEndRideConfirmationDialog(view);
             }
         });
 
@@ -407,7 +438,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     }
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(@NonNull Location location) {
         Log.d("MapsActivity", "onLocationChanged: ");
         if (!startSpeed) {
             oldLocation = location;

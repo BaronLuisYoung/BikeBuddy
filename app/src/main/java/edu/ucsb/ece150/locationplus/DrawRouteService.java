@@ -39,12 +39,6 @@ public class DrawRouteService extends Service {
         Log.d("DrawRouteService", "onCreate: entered");
         createNotificationChannel();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
-//        SharedPreferences preferences = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
-//        SharedPreferences.Editor editor = preferences.edit();
-        //editor.remove("newBikeRoutePoints");
-        //Log.d("DrawRouteService", "onCreate: old bikePoints removed");
-        //editor.commit();
         bikeRoutePoints = new ArrayList<>();
         locationListener = new LocationListener() {
             @Override
@@ -109,7 +103,6 @@ public class DrawRouteService extends Service {
         return START_STICKY;
     }
 
-
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -118,13 +111,7 @@ public class DrawRouteService extends Service {
         if (locationManager != null && locationListener != null) {
             locationManager.removeUpdates(locationListener);
         }
-
-//        Intent intent = new Intent("edu.ucsb.ece150.locationplus.SERVICE_ENDED");
-//        intent.putExtra("drawRouteEnded", true); // 'drawRoute' is your boolean value
-//        sendBroadcast(intent);
-
         stopForeground(true);
-
     }
 
     private void createNotificationChannel() {
@@ -139,7 +126,7 @@ public class DrawRouteService extends Service {
         }
     }
 
-
+    //*-----Unused Binder methods-----*//
     private final IBinder binder = new LocalBinder();
 
     public class LocalBinder extends Binder {
@@ -147,7 +134,6 @@ public class DrawRouteService extends Service {
             return DrawRouteService.this;
         }
     }
-
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
