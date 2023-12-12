@@ -62,7 +62,7 @@ public class RoutesListActivity extends AppCompatActivity {
 
     private void handleSelectedAction(int position, int action, ArrayAdapter<BikeRoute> adapter) {
         switch (action) {
-            case 0: // Delete Route
+            case 1: // Delete Route
                 new AlertDialog.Builder(RoutesListActivity.this)
                         .setTitle("Confirm Delete")
                         .setMessage("Are you sure you want to delete this route?")
@@ -83,14 +83,17 @@ public class RoutesListActivity extends AppCompatActivity {
                         .setNegativeButton(android.R.string.no, null)
                         .show();
                 break;
-            case 1: // View Ride on Map
+            case 0: // View Ride on Map
                 // Code to view the ride on map
-                Intent mapIntent = new Intent(RoutesListActivity.this, MapsActivity.class);
-                mapIntent.putExtra("routeIndex", position);
-                startActivity(mapIntent);
-                break;
-            case 2: // Watch Video
-                // Code to watch the video
+                boolean goToMaps = getIntent().getBooleanExtra("goToMapsActivity", false);
+                Intent intent = new Intent(RoutesListActivity.this, MapsActivity.class);
+                intent.putExtra("routeIndex", position);
+                setResult(RESULT_OK, intent);
+                if (goToMaps) {
+                    startActivity(intent);
+                    finish();
+                } else
+                    finish();
                 break;
         }
     }
@@ -104,7 +107,7 @@ public class RoutesListActivity extends AppCompatActivity {
             adapter.notifyDataSetChanged();
         }
         cardList.setOnItemClickListener((parent, view, position, id) -> {
-            final CharSequence[] items = {"Delete Route", "View Ride on Map", "Watch Video"};
+            final CharSequence[] items = {"View Ride On Map", "Delete Route"};
             AlertDialog.Builder builder = new AlertDialog.Builder(RoutesListActivity.this);
             builder.setTitle("Choose an action");
             builder.setItems(items, (dialog, which) -> handleSelectedAction(position, which, adapter));

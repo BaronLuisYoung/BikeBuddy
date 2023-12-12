@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -241,7 +243,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
                 if (lastKnownLocation != null) {
                     userLocation = new LatLng(lastKnownLocation.getLatitude(), lastKnownLocation.getLongitude());
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 30)); // You can define the zoom level
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLocation,  20)); // You can define the zoom level
                 }
             }
         });
@@ -304,7 +306,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                         latLngList.add(latLng);
                     }
                     drawBikeRoutePolyline(latLngList);
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngList.get(0), 35));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngList.get(0), 20));
                 }
             }
         }
@@ -471,7 +473,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                 latLngList.add(latLng);
             }
             drawBikeRoutePolyline(latLngList);
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngList.get(0), 15));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLngList.get(0), 20));
         }
         //set camera location on position of user back to where user was
         if (mMap != null) {
@@ -486,6 +488,12 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             }
         }
 
+    }
+
+    // Resize the bitmap to the specified width and height
+    private Bitmap resizeBitmap(int resourceId, int width, int height) {
+        Bitmap originalBitmap = BitmapFactory.decodeResource(getResources(), resourceId);
+        return Bitmap.createScaledBitmap(originalBitmap, width, height, false);
     }
     @Override
     public void onLocationChanged(@NonNull Location location) {
@@ -505,7 +513,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
 
             //TODO: change marker color and style
-            markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
+            markerOptions.icon(BitmapDescriptorFactory.fromBitmap(resizeBitmap(R.drawable.dot, 40, 40)));
 
             currentUserLocationMarker = mMap.addMarker(markerOptions);
             Log.d("MapsActivity", "onLocationChanged: created new user position and marker success");
