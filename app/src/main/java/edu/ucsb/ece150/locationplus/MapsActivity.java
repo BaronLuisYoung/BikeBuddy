@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.Manifest;
 import android.util.Pair;
+import android.view.Gravity;
 import android.view.View;
 
 import android.widget.ArrayAdapter;
@@ -253,14 +254,21 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     private void handleStartRideButtonClick(View view) {
         Log.d("MapsActivity", "onClick: Ride start button clicked");
+        FloatingActionButton startRideFab = findViewById(R.id.start_ride_button);
+
         drawRoute = !drawRoute;
         if (drawRoute) {
-            Toast.makeText(view.getContext(), "Ride Started!", Toast.LENGTH_SHORT).show();
+            Toast toast = Toast.makeText(view.getContext(), "Ride Started!", Toast.LENGTH_SHORT);
+            toast.setGravity(Gravity.BOTTOM, 0, 300);
+            toast.show();
             totalDistance = 0.0f;
             rideInfo.setVisibility(View.VISIBLE);
             rideStartTime = System.currentTimeMillis();
+            startRideFab.setImageResource(android.R.drawable.ic_delete);
+
         } else {
-            Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT).show();
+            Toast toast = Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT);
+            toast.show();
             BikeRoute temp = new BikeRoute(bikeRoutePoints, rideID, totalDistance);
             rideID++;
             bikeRoutes.add(temp);
@@ -272,6 +280,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             editor.putString("bikeRoutesList", json);
             editor.apply();
             rideInfo.setVisibility(View.INVISIBLE);
+            startRideFab.setImageResource(android.R.drawable.ic_input_add);
 
         }
     }
