@@ -40,20 +40,26 @@ public class BikeRoute {
     public String toString() {
         Date dateStartTS = new Date(getStartTimestamp());
         Date dateEndTS  = new Date(getEndTimestamp());
-        return "ID: " + id + '\n'
-                + " Distance Traveled: " + distanceTraveled + 'm' + '\n'
-                + "Start Time:"  + dateStartTS.toString() + '\n'
-                + "End Time:" + dateEndTS.toString() + '\n';
+        return "Ride ID: " + id + '\n'
+                + "Distance Traveled: " + distanceTraveled + 'm' + '\n'
+                + "Start Time: "  + dateStartTS + '\n'
+                + "End Time: " + dateEndTS + '\n';
         }
 
     public float getDistanceTraveled() {
         return distanceTraveled;
     }
     public long getStartTimestamp() {
+        if (coordinates.size() == 0) {
+            return -1;
+        }
         return coordinates.get(0).getTimeStamp();
     }
 
     public long getEndTimestamp() {
+        if (coordinates.size() == 0) {
+            return -1;
+        }
         return coordinates.get(coordinates.size() - 1).getTimeStamp();
     }
 

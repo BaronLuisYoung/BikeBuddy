@@ -18,7 +18,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LocationPlus"
+        android:theme="@style/AppTheme"
         tools:targetApi="31">
         <service android:name=".DrawRouteService" />
 
@@ -40,7 +40,7 @@
         <activity
             android:name=".MapsActivity"
             android:exported="false"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+            android:theme="@style/AppTheme">
 
             <!-- No intent-filter needed for MAIN action and LAUNCHER category -->
         </activity>

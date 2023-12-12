@@ -1,7 +1,10 @@
 package edu.ucsb.ece150.locationplus;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 
@@ -16,6 +19,16 @@ public class MainMenuActivity extends AppCompatActivity {
 
         initializeStartRideButton();
         initializeViewPreviousRidesButton();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d("MainMenuActivity", "onDestroy: entered");
+        SharedPreferences sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putBoolean("drawRoute", false);
+        editor.apply();
     }
 
     private void initializeStartRideButton() {

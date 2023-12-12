@@ -1,5 +1,6 @@
 package edu.ucsb.ece150.locationplus;
 
+import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -89,6 +91,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     private Polyline currentBikeRoute; // Polyline to draw the current bike route
     private ArrayList<BikeRoute> bikeRoutes; // List of saved bike routes
     private boolean drawRoute; // Flag to control route drawing
+    private ConstraintLayout rideInfo; // Layout for displaying ride information
     private int rideID = 1; // Identifier for the current ride
 
     /*-------------------------------Sensor Management-------------------------------*/
@@ -122,6 +125,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     private void restoreBikeRoutePoints() {
         Log.d("MapsActivity", "restoreBikeRoutePoints: entered");
         String newBikeRoutePoints = sharedPref.getString("newBikeRoutePoints", "");
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.remove("newBikeRoutePoints");
+        editor.commit();
         Log.d("MapsActivity", "restored newBikeRoutePoints: " + newBikeRoutePoints);
         if(!newBikeRoutePoints.isEmpty() && !newBikeRoutePoints.equals("null")){
             updateBikeRoutePointsFromJson(newBikeRoutePoints);
@@ -183,6 +189,12 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
                     showEndRideConfirmationDialog(view);
             }
         });
+        rideInfo = findViewById(R.id.ride_info);
+        if (drawRoute) {
+            rideInfo.setVisibility(View.VISIBLE);
+        } else {
+            rideInfo.setVisibility(View.INVISIBLE);
+        }
 
         ImageButton btnViewPreviousRides = findViewById(R.id.list_routes_button);
         btnViewPreviousRides.setOnClickListener(new View.OnClickListener() {
@@ -228,6 +240,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         if (drawRoute) {
             Toast.makeText(view.getContext(), "Ride Started!", Toast.LENGTH_SHORT).show();
             totalDistance = 0.0f;
+            rideInfo.setVisibility(View.VISIBLE);
         } else {
             Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT).show();
             BikeRoute temp = new BikeRoute(bikeRoutePoints, rideID, totalDistance);
@@ -240,6 +253,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             SharedPreferences.Editor editor = shared.edit();
             editor.putString("bikeRoutesList", json);
             editor.apply();
+            rideInfo.setVisibility(View.INVISIBLE);
 
         }
     }
@@ -289,11 +303,18 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     private void loadSharedPrefsandRestoreData(){
         SharedPreferences shared = getSharedPreferences("RoutesList", MODE_PRIVATE);
+        sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
+        drawRoute = sharedPref.getBoolean("drawRoute", false);
         Gson gson = new Gson();
         String json = shared.getString("bikeRoutesList", "");
         if (!json.equals("")) {
             BikeRoute[] routes = gson.fromJson(json, BikeRoute[].class);
             bikeRoutes.addAll(Arrays.asList(routes));
+        }
+        String bikeRoutePointsJson = sharedPref.getString("bikeRoutePoints", "");
+        Log.d("MapsActivity", "loadSharedPrefsandRestoreData: " + bikeRoutePointsJson);
+        if (drawRoute && !bikeRoutePointsJson.equals("")) {
+            updateBikeRoutePointsFromJson(bikeRoutePointsJson);
         }
     }
 
@@ -309,8 +330,6 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         initializeSensors();
         initializeUIElements();
         setupLocationServices();
-
-
     }
     @Override
     protected void onResume() {
@@ -345,7 +364,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         super.onPause();
         Log.d("MapsActivity", "onPause: entered");
         if (drawRoute) {
-            currentBikeRoute.remove();
+            if (currentBikeRoute != null) {
+                currentBikeRoute.remove();
+            }
         }
         if (sharedPref != null) {
             SharedPreferences.Editor editor = sharedPref.edit();
@@ -366,7 +387,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             Type type = new TypeToken<List<Point>>() {}.getType();
             String jsonString = gson.toJson(bikeRoutePoints,type);
             editor.putString("bikeRoutePoints", jsonString);
-            editor.apply();
+            editor.commit();
         }
         if (mLocationManager != null) {
             mLocationManager.  removeUpdates(this);
@@ -387,9 +408,10 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         super.onDestroy();
         //if a ride is in progress end the ride
         if(drawRoute){
-            drawRoute = false;
+//            drawRoute = false;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean("drawRoute", drawRoute);
+            //editor.putString("bikeRoutePoints", bikeRoutePoints);
             editor.commit();
         }
         //stop DrawRouteService since we are closing the app
@@ -468,13 +490,23 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             //new points are not added to map until you call updateBikeOnMap();
             Point newPoint = new Point(location.getLatitude(), location.getLongitude(), location.getTime());
             bikeRoutePoints.add(newPoint);
+
+            Gson gson = new Gson();
+            Type type = new TypeToken<List<Point>>() {}.getType();
+            String jsonString = gson.toJson(bikeRoutePoints,type);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putString("bikeRoutePoints", jsonString);
+            editor.commit();
+
             updateTotalDistance();
             updateBikeRouteOnMap();
-            updateCameraBearing(mMap,location.getBearing());
+            LatLng tempLoc = new LatLng(location.getLatitude(), location.getLongitude());
+            updateCameraBearing(mMap,location.getBearing(), tempLoc);
+
         }
 
         velocityTextView = findViewById(R.id.currentSpeed);
-        String velocityText = "Velocity: " + String.format(Locale.US, "%.2f", location.getSpeed()*3.6) + " KPH";
+        String velocityText = String.format(Locale.US, "%.2f", location.getSpeed()*3.6) + " KPH";
         velocityTextView.setText(velocityText);
 
         long currentTimeMS = System.currentTimeMillis();
@@ -490,7 +522,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             acceleration = 0.00f;
         }
         accelTextView = findViewById(R.id.currentAcceleration);
-        String accelText = "Acceleration: " + String.format(Locale.US, "%.2f", acceleration) + " m/s²";
+        String accelText = String.format(Locale.US, "%.2f", acceleration) + " m/s²";
         accelTextView.setText(accelText);
 
     }
@@ -512,16 +544,17 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
         // Display the total distance in a TextView
         TextView distanceTextView = findViewById(R.id.current_distance_traveled); // Make sure you have this TextView in your layout
-        distanceTextView.setText(String.format(Locale.US, "Distance Traveled: %.2f km", totalDistance / 1000));
+        distanceTextView.setText(String.format(Locale.US, "%.2f km", totalDistance / 1000));
     }
     //TODO add bearing from compass, adjust the zoom
     //function used to update camera orientation
-    private void updateCameraBearing(GoogleMap googleMap, float bearing) {
+    private void updateCameraBearing(GoogleMap googleMap, float bearing, LatLng latLng) {
         if (googleMap == null){ return;}
         Log.d("MapsActivity", "updateCameraBearing: Bearing = " + bearing);
         mCameraPosition = CameraPosition
                 .builder(googleMap.getCameraPosition())
                 .bearing(bearing)
+                .target(latLng)
                 .build();
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(mCameraPosition));
     }
@@ -550,7 +583,9 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         if (currentBikeRoute != null) {
             currentBikeRoute.remove(); // Remove the old polyline
         }
-        currentBikeRoute = mMap.addPolyline(polylineOptions);
+        if(mMap != null){
+            currentBikeRoute = mMap.addPolyline(polylineOptions);
+        }
     }
 
     //------------------------------------------------------------------------//

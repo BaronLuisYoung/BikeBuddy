@@ -1,9 +1,18 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.LocationPlus" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+<!-- res/values/themes.xml -->
 
-    <style name="Theme.LocationPlus" parent="Base.Theme.LocationPlus" />
+<resources>
+
+    <!-- Base application theme -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/tropical_rainforest</item>
+        <item name="colorPrimaryDark">@color/tropical_rainforest</item>
+        <item name="colorAccent">@color/tropical_rainforest</item>
+
+        <!-- Customize other theme attributes -->
+        <!-- Example: -->
+        <!-- <item name="android:windowBackground">@drawable/background</item> -->
+    </style>
+    <!-- Other themes or styles can be defined here -->
+
 </resources>
