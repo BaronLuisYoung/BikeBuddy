@@ -4,6 +4,6 @@
     <string name="info_details">Show information details</string>
     <string name="information_button">Information Button</string>
     <string name="center_camera_on_user">center_on_user</string>
-    <string name="start_ride">Ride Map View</string>
-    <string name="view_previous_rides">View Previous Rides</string>
+    <string name="start_ride">  Ride Map View  </string>
+    <string name="view_previous_rides">  View Previous Rides  </string>
 </resources>

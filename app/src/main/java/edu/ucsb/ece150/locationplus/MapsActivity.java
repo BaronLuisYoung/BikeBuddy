@@ -35,6 +35,17 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.fitness.Fitness;
+import com.google.android.gms.fitness.FitnessOptions;
+import com.google.android.gms.fitness.data.Bucket;
+import com.google.android.gms.fitness.data.DataPoint;
+import com.google.android.gms.fitness.data.DataSet;
+import com.google.android.gms.fitness.data.DataType;
+import com.google.android.gms.fitness.data.Field;
+import com.google.android.gms.fitness.request.DataReadRequest;
+import com.google.android.gms.fitness.result.DataReadResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -53,8 +64,11 @@ import java.lang.reflect.Type;
 //may utilize later
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import com.google.android.gms.maps.model.Polyline;
@@ -67,6 +81,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
 
     /*---------------------------------Constants------------------------------------*/
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 2;
     /*---------------------------------UI Components--------------------------------*/
     // TextViews for displaying acceleration and velocity
     TextView accelTextView;
@@ -106,6 +121,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     /*---------------------------------Timing----------------------------------------*/
     // Manages time measurements and intervals
     long oldTime = 0; // Stores an old time value for calculations
+    long rideStartTime = 0; // Stores the time the ride started
 
     /*---------------------------------Speed & Distance------------------------------*/
     // Variables for speed and distance calculations
@@ -113,6 +129,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     private float totalDistance = 0f; // Accumulated distance traveled
 
     /*----------------------onCreate Set Up functions----------------------------------*/
+
     private void updateBikeRoutePointsFromJson(String bikeRoutePointsJson) {
         Log.d("MapsActivity", "updateBikeRoutePointsFromJson: entered");
         Gson gson = new Gson();
@@ -241,6 +258,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             Toast.makeText(view.getContext(), "Ride Started!", Toast.LENGTH_SHORT).show();
             totalDistance = 0.0f;
             rideInfo.setVisibility(View.VISIBLE);
+            rideStartTime = System.currentTimeMillis();
         } else {
             Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT).show();
             BikeRoute temp = new BikeRoute(bikeRoutePoints, rideID, totalDistance);
@@ -342,6 +360,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         rideID = sharedPref.getInt("rideID", 0);
         if(drawRoute) {
             restoreBikeRoutePoints();
+            rideStartTime = sharedPref.getLong("rideStartTime", 0);
             if (bikeRoutePoints.size() > 0) {
                 updateBikeRouteOnMap();
                 //new points are not added to map until you call updateBikeOnMap();
@@ -370,7 +389,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         }
         if (sharedPref != null) {
             SharedPreferences.Editor editor = sharedPref.edit();
-
+            editor.putLong("rideStartTime", rideStartTime);
             //save camera position
             if (mMap != null) {
                 mCameraPosition = mMap.getCameraPosition();
@@ -475,6 +494,7 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             markerOptions.position(userLocation);
             markerOptions.title("Current Location");
 
+
             //TODO: change marker color and style
             markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE));
 
@@ -491,6 +511,16 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             Point newPoint = new Point(location.getLatitude(), location.getLongitude(), location.getTime());
             bikeRoutePoints.add(newPoint);
 
+            long currentTimeMS = System.currentTimeMillis();
+            long timeDifference = currentTimeMS - rideStartTime;
+
+            TextView textView = findViewById(R.id.current_time);
+            String timeText = String.format(Locale.US, "%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(timeDifference),
+                    TimeUnit.MILLISECONDS.toMinutes(timeDifference) % TimeUnit.HOURS.toMinutes(1),
+                    TimeUnit.MILLISECONDS.toSeconds(timeDifference) % TimeUnit.MINUTES.toSeconds(1));
+
+            textView.setText(timeText);
+
             Gson gson = new Gson();
             Type type = new TypeToken<List<Point>>() {}.getType();
             String jsonString = gson.toJson(bikeRoutePoints,type);
@@ -502,12 +532,16 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             updateBikeRouteOnMap();
             LatLng tempLoc = new LatLng(location.getLatitude(), location.getLongitude());
             updateCameraBearing(mMap,location.getBearing(), tempLoc);
-
         }
 
         velocityTextView = findViewById(R.id.currentSpeed);
         String velocityText = String.format(Locale.US, "%.2f", location.getSpeed()*3.6) + " KPH";
         velocityTextView.setText(velocityText);
+
+        TextView elevationTextView = findViewById(R.id.elevation);
+        String elevationText = String.format(Locale.US, "ELV. %.2f", location.getAltitude()) + " m";
+        elevationTextView.setText(elevationText);
+
 
         long currentTimeMS = System.currentTimeMillis();
 
