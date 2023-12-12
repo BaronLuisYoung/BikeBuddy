@@ -35,8 +35,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageCapture;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.video.VideoCapture;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -77,6 +83,7 @@ import java.util.concurrent.TimeUnit;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -131,6 +138,11 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
     private boolean startSpeed = false; // Flag to indicate if speed calculation should start
     private float totalDistance = 0f; // Accumulated distance traveled
 
+    /*-----------------------------Camera---------------------------------------------*/
+    private static final int REQUEST_CAMERA_PERMISSION_CODE = 1001;
+    private static final int REQUEST_AUDIO_PERMISSION_CODE = 1002;
+    private static final int REQUEST_STORAGE_WRITE_PERMISSION_CODE = 1003;
+    private static final int REQUEST_STORAGE_READ_PERMISSION_CODE = 1004;
     /*----------------------onCreate Set Up functions----------------------------------*/
 
     private void updateBikeRoutePointsFromJson(String bikeRoutePointsJson) {
@@ -267,11 +279,15 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             rideInfo.setVisibility(View.VISIBLE);
             rideStartTime = System.currentTimeMillis();
             startRideFab.setImageResource(android.R.drawable.ic_delete);
+            startService(new Intent(MapsActivity.this, CameraService.class));
 
         } else {
+            stopService(new Intent(MapsActivity.this, CameraService.class));
             Toast toast = Toast.makeText(view.getContext(), "Ride Ended!", Toast.LENGTH_SHORT);
             toast.show();
-            BikeRoute temp = new BikeRoute(bikeRoutePoints, rideID, totalDistance);
+            SharedPreferences sharedPref = getSharedPreferences("BikeBuddyPrefs", Context.MODE_PRIVATE);
+            String videoPath = sharedPref.getString("videoPath", "");
+            BikeRoute temp = new BikeRoute(bikeRoutePoints, rideID, totalDistance, videoPath);
             rideID++;
             bikeRoutes.add(temp);
             bikeRoutePoints.clear();
@@ -283,7 +299,6 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
             editor.apply();
             rideInfo.setVisibility(View.INVISIBLE);
             startRideFab.setImageResource(android.R.drawable.ic_input_add);
-
         }
     }
 
@@ -385,6 +400,8 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         } else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSION_REQUEST_CODE);
         }
+
+        requestPermissions();
 
         drawRoute = sharedPref.getBoolean("drawRoute", false);
         Log.d("MapsActivity", "onResume: drawRoute is" + drawRoute);
@@ -637,6 +654,53 @@ public class MapsActivity extends AppCompatActivity implements LocationListener,
         if(mMap != null){
             currentBikeRoute = mMap.addPolyline(polylineOptions);
         }
+    }
+
+    private void requestPermissions() {
+        // Request camera and audio permissions
+        if (!checkCameraPermission()) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    REQUEST_CAMERA_PERMISSION_CODE);
+        }
+
+        if (!checkAudioPermission()) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_AUDIO_PERMISSION_CODE);
+        }
+
+        if (!checkWriteStoragePermission()) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_STORAGE_WRITE_PERMISSION_CODE);
+        }
+
+        if (!checkReadStoragePermission()) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                    REQUEST_STORAGE_READ_PERMISSION_CODE);
+        }
+    }
+
+    private boolean checkCameraPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean checkAudioPermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean checkWriteStoragePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
+    }
+
+    private boolean checkReadStoragePermission() {
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     //------------------------------------------------------------------------//

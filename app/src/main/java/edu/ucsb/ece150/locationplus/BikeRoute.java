@@ -22,11 +22,13 @@ public class BikeRoute {
     private float avgAltitude;
     private float maxAltitude;
     private float maxAcceleration;
+    private String videoPath;
     private final List<Point> coordinates;
 
-    public BikeRoute(List<Point>latLngList, int id, float distanceTraveled) { //add timestamps argument later
+    public BikeRoute(List<Point>latLngList, int id, float distanceTraveled, String path) { //add timestamps argument later
         this.id = id;
         this.distanceTraveled = distanceTraveled;
+        this.videoPath = path;
         coordinates = new ArrayList<>();
         coordinates.addAll(latLngList);
     }
@@ -61,6 +63,10 @@ public class BikeRoute {
             return -1;
         }
         return coordinates.get(coordinates.size() - 1).getTimeStamp();
+    }
+
+    public String getVideoPath() {
+        return videoPath;
     }
 
 

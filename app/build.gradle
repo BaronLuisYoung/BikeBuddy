@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'edu.ucsb.ece150.locationplus'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "edu.ucsb.ece150.locationplus"
@@ -42,4 +42,7 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.google.android.gms:play-services-fitness:21.1.0'
     implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    implementation "androidx.camera:camera-camera2:1.3.0"
+    implementation "androidx.camera:camera-lifecycle:1.3.0"
+    implementation "androidx.camera:camera-view:1.4.0-alpha02"
 }
